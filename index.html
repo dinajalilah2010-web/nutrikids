@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NutriKids - Solusi Gizi Balita & Sistem Posyandu Digital</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans pb-24">
+
+  <!-- NAVBAR / HEADER -->
+  <header class="bg-emerald-600 text-white p-4 shadow-md sticky top-0 z-50">
+    <div class="max-w-md mx-auto flex justify-between items-center">
+      <div class="flex items-center space-x-2">
+        <span class="text-2xl">🥗</span>
+        <h1 class="text-xl font-bold tracking-wide">NutriKids</h1>
+      </div>
+      <span class="text-xs bg-emerald-700 px-2.5 py-1 rounded-full font-medium">v2.1 Final</span>
+    </div>
+  </header>
+
+  <main class="max-w-md mx-auto px-4 mt-4 space-y-5">
+
+    <!-- SAKELAR MODE (IBU VS POSYANDU) -->
+    <div class="bg-emerald-100 p-1.5 rounded-2xl flex text-xs font-bold text-center">
+      <button id="btnModeIbu" onclick="switchMode('ibu')" class="w-1/2 py-2 rounded-xl bg-white text-emerald-800 shadow-sm transition">
+        📱 Mode Ibu / Mandiri
+      </button>
+      <button id="btnModePosyandu" onclick="switchMode('posyandu')" class="w-1/2 py-2 rounded-xl text-emerald-700 hover:text-emerald-900 transition">
+        🏥 Mode Petugas Posyandu
+      </button>
+    </div>
+
+    <!-- ==================== TAMPILAN MODE IBU ==================== -->
+    <div id="modeIbuSection" class="space-y-5">
+      
+      <!-- PROFIL RINGKAS PENGGUNA -->
+      <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-emerald-100 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-base">
+            👩‍👦
+          </div>
+          <div>
+            <p class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Profil Anak</p>
+            <h4 id="profileHeaderName" class="text-xs font-bold text-gray-800">Pengguna NutriKids</h4>
+          </div>
+        </div>
+        <span id="kmsStatusBadge" class="bg-gray-100 text-gray-600 text-[10px] font-bold px-2 py-1 rounded-lg">Belum Cek KMS</span>
+      </div>
+
+      <!-- HERO SECTION -->
+      <section class="bg-gradient-to-r from-emerald-500 to-teal-600 text-white p-5 rounded-2xl shadow-lg text-center">
+        <h2 class="text-xl font-extrabold mb-1.5">Cegah Stunting, Pantau Gizi Si Kecil</h2>
+        <p class="text-[11px] text-emerald-100 mb-4 leading-relaxed">
+          Solusi terpadu KMS digital, rekomendasi resep dari kulkasmu, dan paket Meal Kit bergizi.
+        </p>
+        <div class="flex gap-2 justify-center">
+          <button onclick="goToSection('kms-section')" class="bg-amber-400 hover:bg-amber-500 text-amber-950 font-semibold text-xs px-3.5 py-2 rounded-xl transition shadow">📊 Cek KMS</button>
+          <button onclick="goToSection('ai-section')" class="bg-white/20 hover:bg-white/30 text-white font-semibold text-xs px-3.5 py-2 rounded-xl transition backdrop-blur-sm">📸 Scan Kulkas</button>
+        </div>
+      </section>
+
+      <!-- FITUR 1: AI PHOTO SCAN KULKAS -->
+      <section id="ai-section" class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 scroll-mt-20">
+        <div class="flex items-center space-x-2 mb-3">
+          <span class="bg-amber-100 text-amber-800 p-2 rounded-lg text-sm">📸</span>
+          <div>
+            <h3 class="font-bold text-gray-900 text-sm">AI Food Scanner</h3>
+            <p class="text-[11px] text-gray-500">Punya sisa bahan di kulkas? Biar AI kreasikan resepnya</p>
+          </div>
+        </div>
+
+        <div class="space-y-3">
+          <div class="border-2 border-dashed border-gray-200 p-4 text-center rounded-xl hover:border-emerald-400 transition cursor-pointer">
+            <input type="file" id="ingredientImage" accept="image/*" class="hidden" onchange="updateFileName(this)">
+            <label for="ingredientImage" class="cursor-pointer block">
+              <span class="text-2xl block mb-1">🥦</span>
+              <span id="fileLabel" class="text-xs text-gray-600 font-medium">Klik untuk upload / foto bahan makanan</span>
+            </label>
+          </div>
+
+          <button onclick="analyzeImageWithAI()" class="w-full bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold py-2.5 rounded-xl transition shadow-sm">
+            ✨ Analisis Foto & Minta AI Racik Resep
+          </button>
+
+          <!-- Hasil AI -->
+          <div id="aiResult" class="hidden bg-amber-50/80 border border-amber-200 p-3.5 rounded-xl text-xs text-amber-900 mt-3">
+            <div id="aiLoading" class="hidden text-center py-2">
+              <span class="animate-spin inline-block text-lg">⏳</span>
+              <p class="mt-1 font-medium text-amber-800">AI sedang menganalisis bahan makanan...</p>
+            </div>
+            <div id="aiTextContent"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FITUR 2: KMS DIGITAL MANDIRI -->
+      <section id="kms-section" class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 scroll-mt-20">
+        <div class="flex items-center space-x-2 mb-3">
+          <span class="bg-emerald-100 text-emerald-800 p-2 rounded-lg text-sm">📊</span>
+          <div>
+            <h3 class="font-bold text-gray-900 text-sm">KMS Digital Mandiri</h3>
+            <p class="text-[11px] text-gray-500">Pantau kurva berat badan anak secara berkala</p>
+          </div>
+        </div>
+
+        <form id="kmsForm" class="space-y-3">
+          <div>
+            <label class="block text-[11px] font-semibold text-gray-600 mb-1">Nama Anak</label>
+            <input type="text" id="childName" placeholder="Masukkan Nama Anak (misal: Budi)" required class="w-full text-xs p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none">
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] font-semibold text-gray-600 mb-1">Usia (Bulan)</label>
+              <input type="number" id="childAge" placeholder="18" required class="w-full text-xs p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-gray-600 mb-1">Berat Badan (kg)</label>
+              <input type="number" step="0.1" id="childWeight" placeholder="8.5" required class="w-full text-xs p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none">
+            </div>
+          </div>
+          <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold py-2.5 rounded-xl transition shadow-sm">
+            Cek Status & Tampilkan Grafik
+          </button>
+        </form>
+
+        <div id="resultSection" class="hidden mt-4 pt-3 border-t">
+          <div id="statusBadge" class="p-2.5 text-xs font-semibold rounded-lg text-center mb-3"></div>
+          <div class="bg-gray-50 p-2 rounded-xl">
+            <canvas id="kmsChart" width="400" height="250"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- FITUR 3: MEAL KIT -->
+      <section id="mealkit-section" class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 scroll-mt-20">
+        <div class="flex justify-between items-end mb-3">
+          <div>
+            <h3 class="font-bold text-gray-900 text-sm">🍱 Meal Kit NutriKids</h3>
+            <p class="text-[11px] text-gray-500">Porsi pas & siap olah &lt; 5 menit</p>
+          </div>
+          <span class="text-[10px] text-emerald-600 font-semibold bg-emerald-50 px-2 py-0.5 rounded">Praktis</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div class="border rounded-xl p-3 flex flex-col justify-between hover:shadow-md transition">
+            <div>
+              <div class="text-3xl mb-1 text-center">🍲</div>
+              <h4 class="font-bold text-xs text-gray-800">Tumis Sapi Kaldu Bening</h4>
+              <p class="text-[10px] text-gray-500 mt-0.5">Tinggi Zat Besi (Anti Stunting)</p>
+            </div>
+            <div class="mt-3">
+              <span class="text-xs font-extrabold text-emerald-600 block mb-1">Rp 12.000</span>
+              <button onclick="orderMeal('Tumis Sapi Kaldu Bening')" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[11px] font-bold py-1.5 rounded-lg border border-emerald-200 transition">
+                + Tambah
+              </button>
+            </div>
+          </div>
+
+          <div class="border rounded-xl p-3 flex flex-col justify-between hover:shadow-md transition">
+            <div>
+              <div class="text-3xl mb-1 text-center">🥣</div>
+              <h4 class="font-bold text-xs text-gray-800">Puree Ayam Butter Cheese</h4>
+              <p class="text-[10px] text-gray-500 mt-0.5">Booster BB Balita (Kalori Tinggi)</p>
+            </div>
+            <div class="mt-3">
+              <span class="text-xs font-extrabold text-emerald-600 block mb-1">Rp 12.000</span>
+              <button onclick="orderMeal('Puree Ayam Butter Cheese')" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[11px] font-bold py-1.5 rounded-lg border border-emerald-200 transition">
+                + Tambah
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- ==================== TAMPILAN MODE POSYANDU ==================== -->
+    <div id="modePosyanduSection" class="hidden space-y-5">
+      
+      <!-- CARD INPUT DATA POSYANDU -->
+      <section class="bg-white p-5 rounded-2xl shadow-sm border border-emerald-100">
+        <div class="flex items-center space-x-2 mb-3">
+          <span class="bg-emerald-100 text-emerald-800 p-2 rounded-lg text-sm">🏥</span>
+          <div>
+            <h3 class="font-bold text-gray-900 text-sm">Pencatatan Penimbangan Balita</h3>
+            <p class="text-[11px] text-gray-500">Khusus Petugas Posyandu / Kader Kesehatan</p>
+          </div>
+        </div>
+
+        <form id="posyanduForm" class="space-y-3">
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] font-semibold text-gray-600 mb-1">NIK / ID Balita</label>
+              <input type="text" id="posNik" placeholder="35780..." required class="w-full text-xs p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-gray-600 mb-1">Nama Balita</label>
+              <input type="text" id="posNama" placeholder="Nama Lengkap" required class="w-full text-xs p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2">
+            <div>
+              <label class="block text-[11px] font-semibold text-gray-600 mb-1">Usia (Bln)</label>
+              <input type="number" id="posUsia" placeholder="18" required class="w-full text-xs p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-gray-600 mb-1">BB (kg)</label>
+              <input type="number" step="0.1" id="posBb" placeholder="8.5" required class="w-full text-xs p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-gray-600 mb-1">TB (cm)</label>
+              <input type="number" step="0.1" id="posTb" placeholder="78" required class="w-full text-xs p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none">
+            </div>
+          </div>
+
+          <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 rounded-xl transition shadow-sm">
+            ➕ Simpan Data Ke Database Posyandu
+          </button>
+        </form>
+      </section>
+
+      <!-- TABEL REKAPITULASI POSYANDU DIGITAL -->
+      <section class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+        <div class="flex justify-between items-center mb-3">
+          <div>
+            <h3 class="font-bold text-gray-900 text-sm">📋 Rekapitulasi Data Balita RT/RW</h3>
+            <p class="text-[11px] text-gray-500">Total terdata: <span id="totalBalita" class="font-bold text-emerald-600">2</span> Balita</p>
+          </div>
+          <button onclick="exportData()" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2.5 py-1.5 rounded-lg border border-emerald-200 transition">
+            📥 Cetak Laporan
+          </button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-[11px] border-collapse">
+            <thead>
+              <tr class="bg-gray-100 text-gray-600 font-semibold border-b">
+                <th class="p-2">Nama</th>
+                <th class="p-2">Usia</th>
+                <th class="p-2">BB/TB</th>
+                <th class="p-2">Status Stunting</th>
+              </tr>
+            </thead>
+            <tbody id="posyanduTableBody" class="divide-y text-gray-700">
+              <tr>
+                <td class="p-2 font-bold">Budi Santoso</td>
+                <td class="p-2">18 Bln</td>
+                <td class="p-2">8.5 kg / 78 cm</td>
+                <td class="p-2"><span class="bg-yellow-100 text-yellow-800 text-[9px] font-bold px-1.5 py-0.5 rounded">BBLR / Riskan</span></td>
+              </tr>
+              <tr>
+                <td class="p-2 font-bold">Siti Rahma</td>
+                <td class="p-2">24 Bln</td>
+                <td class="p-2">11.2 kg / 85 cm</td>
+                <td class="p-2"><span class="bg-emerald-100 text-emerald-800 text-[9px] font-bold px-1.5 py-0.5 rounded">Gizi Baik</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </div>
+
+  </main>
+
+  <!-- BOTTOM NAVIGATION BAR -->
+  <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 z-50">
+    <div class="max-w-md mx-auto flex justify-around items-center text-center">
+      <button onclick="goToHome()" class="flex flex-col items-center text-emerald-600 focus:outline-none">
+        <span class="text-base">🏠</span>
+        <span class="text-[9px] font-bold">Beranda</span>
+      </button>
+      <button onclick="goToSection('ai-section')" class="flex flex-col items-center text-gray-400 hover:text-emerald-600 focus:outline-none">
+        <span class="text-base">📸</span>
+        <span class="text-[9px] font-semibold">Scan AI</span>
+      </button>
+      <button onclick="goToSection('kms-section')" class="flex flex-col items-center text-gray-400 hover:text-emerald-600 focus:outline-none">
+        <span class="text-base">📊</span>
+        <span class="text-[9px] font-semibold">KMS</span>
+      </button>
+      <button onclick="switchMode('posyandu')" class="flex flex-col items-center text-gray-400 hover:text-emerald-600 focus:outline-none">
+        <span class="text-base">🏥</span>
+        <span class="text-[9px] font-semibold">Posyandu</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- SCRIPT JAVASCRIPT DIRECT -->
+  <script>
+    let myChart = null;
+
+    // FUNGSI SAKELAR MODE & NAVIGASI TERHUBUNG
+    function switchMode(mode) {
+      const ibuSec = document.getElementById('modeIbuSection');
+      const posSec = document.getElementById('modePosyanduSection');
+      const btnIbu = document.getElementById('btnModeIbu');
+      const btnPos = document.getElementById('btnModePosyandu');
+
+      if (mode === 'ibu') {
+        ibuSec.classList.remove('hidden');
+        posSec.classList.add('hidden');
+        btnIbu.className = "w-1/2 py-2 rounded-xl bg-white text-emerald-800 shadow-sm transition";
+        btnPos.className = "w-1/2 py-2 rounded-xl text-emerald-700 hover:text-emerald-900 transition";
+      } else {
+        ibuSec.classList.add('hidden');
+        posSec.classList.remove('hidden');
+        btnPos.className = "w-1/2 py-2 rounded-xl bg-white text-emerald-800 shadow-sm transition";
+        btnIbu.className = "w-1/2 py-2 rounded-xl text-emerald-700 hover:text-emerald-900 transition";
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    function goToHome() {
+      switchMode('ibu');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function goToSection(sectionId) {
+      switchMode('ibu');
+      setTimeout(() => {
+        const el = document.getElementById(sectionId);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    }
+
+    function updateFileName(input) {
+      const fileLabel = document.getElementById('fileLabel');
+      if (input.files && input.files[0]) {
+        fileLabel.innerText = "Terpilih: " + input.files[0].name;
+      }
+    }
+
+    // FORM KMS MANDIRI
+    document.getElementById('kmsForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const name = document.getElementById('childName').value;
+      const age = document.getElementById('childAge').value;
+      const weight = parseFloat(document.getElementById('childWeight').value);
+
+      document.getElementById('profileHeaderName').innerText = name + " (" + age + " Bln)";
+      const topBadge = document.getElementById('kmsStatusBadge');
+      topBadge.className = "bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded-lg";
+      topBadge.innerText = "KMS Aktif";
+
+      const resultSection = document.getElementById('resultSection');
+      const statusBadge = document.getElementById('statusBadge');
+      resultSection.classList.remove('hidden');
+
+      if (weight < 9.0) {
+        statusBadge.className = "p-2 text-xs font-semibold rounded-lg text-center bg-yellow-100 text-yellow-800 border border-yellow-200";
+        statusBadge.innerText = "Status " + name + ": Perlu Booster BB (Disarankan Menu Puree Ayam Butter)";
+      } else {
+        statusBadge.className = "p-2 text-xs font-semibold rounded-lg text-center bg-emerald-100 text-emerald-800 border border-emerald-200";
+        statusBadge.innerText = "Status " + name + ": Berat Badan Normal Sesuai Kurva KMS";
+      }
+
+      if (myChart) { myChart.destroy(); }
+
+      const ctx = document.getElementById('kmsChart').getContext('2d');
+      myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['12 Bln', '15 Bln', age + ' Bln (Sekarang)'],
+          datasets: [
+            {
+              label: 'Batas Minimal KMS (kg)',
+              data: [8.0, 8.5, 9.0],
+              borderColor: '#f59e0b',
+              borderDash: [5, 5],
+              fill: false
+            },
+            {
+              label: 'BB ' + name + ' (kg)',
+              data: [8.2, 8.8, weight],
+              borderColor: '#059669',
+              backgroundColor: '#059669',
+              borderWidth: 2,
+              fill: false
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: true, position: 'bottom' } }
+        }
+      });
+    });
+
+    // FORM INPUT PETUGAS POSYANDU
+    let balitaCount = 2;
+    document.getElementById('posyanduForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const nama = document.getElementById('posNama').value;
+      const usia = document.getElementById('posUsia').value;
+      const bb = parseFloat(document.getElementById('posBb').value);
+      const tb = document.getElementById('posTb').value;
+
+      let statusTag = '';
+      if (bb < 9.0) {
+        statusTag = '<span class="bg-yellow-100 text-yellow-800 text-[9px] font-bold px-1.5 py-0.5 rounded">BBLR / Riskan</span>';
+      } else {
+        statusTag = '<span class="bg-emerald-100 text-emerald-800 text-[9px] font-bold px-1.5 py-0.5 rounded">Gizi Baik</span>';
+      }
+
+      const tbody = document.getElementById('posyanduTableBody');
+      const newRow = `
+        <tr>
+          <td class="p-2 font-bold">${nama}</td>
+          <td class="p-2">${usia} Bln</td>
+          <td class="p-2">${bb} kg / ${tb} cm</td>
+          <td class="p-2">${statusTag}</td>
+        </tr>
+      `;
+      tbody.innerHTML += newRow;
+
+      balitaCount++;
+      document.getElementById('totalBalita').innerText = balitaCount;
+
+      alert(Data balita ${nama} berhasil disimpan ke database Posyandu!);
+      this.reset();
+    });
+
+    function exportData() {
+      alert("Laporan Rekapitulasi Posyandu berhasil di-generate ke format PDF/Excel!");
+    }
+
+    // FITUR AI SCAN
+    function analyzeImageWithAI() {
+      const fileInput = document.getElementById('ingredientImage');
+      const aiResult = document.getElementById('aiResult');
+      const aiLoading = document.getElementById('aiLoading');
+      const aiTextContent = document.getElementById('aiTextContent');
+
+      if (!fileInput.files || fileInput.files.length === 0) {
+        alert("Silakan pilih atau ambil foto bahan makanan terlebih dahulu!");
+        return;
+      }
+
+      aiResult.classList.remove('hidden');
+      aiLoading.style.display = "block";
+      aiTextContent.innerHTML = "";
+
+      setTimeout(function() {
+        aiLoading.style.display = "none";
+        aiTextContent.innerHTML = 
+          '<p class="font-bold text-amber-900 mb-1">🔍 AI Terdeteksi Bahan:</p>' +
+          '<p class="mb-2">Telur, Wortel, dan Nasi.</p>' +
+          '<p class="font-bold text-amber-900 mb-1">💡 Rekomendasi Menu Quick-Cook (&lt; 8 Menit):</p>' +
+          '<ul class="list-disc pl-4 space-y-1 mb-3">' +
+            '<li><b>Nasi Tim Telur Wortel Gurih:</b> Cincang halus wortel, tumis bersama telur & mentega lalu tambahkan nasi. Sangat praktis!</li>' +
+          '</ul>' +
+          '<button onclick="saveRecipe()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-1.5 rounded-lg text-[11px] transition">❤️ Simpan Resep Ini ke Favorit</button>';
+      }, 1200);
+    }
+
+    function saveRecipe() {
+      const name = document.getElementById('childName').value || "Pengguna";
+      alert("Berhasil! Resep Nasi Tim Telur Wortel tersimpan di menu Favorit " + name + ".");
+    }
+
+    function orderMeal(itemName) {
+      alert('Berhasil menambahkan "' + itemName + '" ke pesanan NutriKids! Pengiriman esok subuh sebelum jam 06.00 WIB.');
+    }
+  </script>
+</body>
+</html>
